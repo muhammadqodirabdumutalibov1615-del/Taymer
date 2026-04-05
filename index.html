@@ -3,42 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Taymer - Dars va Tanaffus</title>
+    <title>Pro Taymer - Muhammadqodir</title>
     <style>
-        :root { --bg: #f4f4f9; --text: #333; --card: white; }
-        .dark-mode { --bg: #1a1a2e; --text: #eee; --card: #16213e; }
+        :root { --bg: #f4f4f9; --text: #333; --card: white; --shadow: rgba(0,0,0,0.1); }
+        .dark-mode { --bg: #1a1a2e; --text: #eee; --card: #16213e; --shadow: rgba(0,0,0,0.3); }
         
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: var(--bg); color: var(--text); transition: 0.3s; padding-top: 50px; }
-        .container { background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: inline-block; width: 90%; max-width: 350px; }
-        #display { font-size: 70px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: var(--bg); color: var(--text); transition: 0.3s; padding: 40px 10px; margin: 0; }
+        .container { background: var(--card); padding: 30px; border-radius: 25px; box-shadow: 0 10px 40px var(--shadow); display: inline-block; width: 100%; max-width: 350px; }
         
-        .buttons { display: flex; flex-direction: column; gap: 10px; }
-        button { padding: 15px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 12px; transition: 0.2s; }
+        #status { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; font-weight: bold; }
+        #display { font-size: 75px; font-weight: bold; margin: 15px 0; font-variant-numeric: tabular-nums; }
+        
+        .buttons { display: flex; flex-direction: column; gap: 12px; }
+        button { padding: 16px; font-size: 17px; font-weight: 600; cursor: pointer; border: none; border-radius: 15px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
         .btn-main { background: #28a745; color: white; }
         .btn-stop { background: #dc3545; color: white; }
         .btn-mode { background: #007bff; color: white; }
-        .btn-dark { background: #444; color: white; margin-top: 15px; }
+        .btn-break { background: #17a2b8; color: white; }
+        .btn-dark { background: #444; color: white; margin-top: 10px; }
         
-        button:active { transform: scale(0.95); }
+        button:active { transform: scale(0.96); }
+        
+        /* HISOBLAGICH QISMI DIZAYNI */
+        .counter-section { margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc; font-size: 12px; color: #888; }
+        .counter-section img { margin-top: 10px; border-radius: 4px; filter: grayscale(20%); }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2 id="status">Tayyor</h2>
+        <div id="status">TAYYOR</div>
         <div id="display">00:00</div>
         
         <div class="buttons">
             <button id="startStopBtn" class="btn-main" onclick="toggleTimer()">Boshlash</button>
             <button class="btn-mode" onclick="setPomodoro(25)">🎓 Dars (25 daqiqa)</button>
-            <button class="btn-mode" onclick="setPomodoro(5)" style="background:#17a2b8;">☕ Tanaffus (5 daqiqa)</button>
+            <button class="btn-break" onclick="setPomodoro(5)">☕ Tanaffus (5 daqiqa)</button>
             <button class="btn-dark" onclick="toggleDarkMode()">🌙 Tungi rejim</button>
+        </div>
+
+        <div class="counter-section">
+            Tashriflar soni:<br>
+            <img src="https://hitwebcounter.com/counter/counter.php?page=taymer_final_1615&style=0005&nbdigits=5&type=page&initCount=0" title="Free Counter" Alt="web counter" border="0" />
         </div>
     </div>
 
     <script>
-        let seconds = 200;
+        let seconds = 0;
         let timerInterval = null;
         let isRunning = false;
 
@@ -52,38 +64,41 @@
         function toggleTimer() {
             const btn = document.getElementById('startStopBtn');
             if (!isRunning) {
-                isRunning = true;
+                if (seconds === 0) {
+                    // Agar vaqt tanlanmagan bo'lsa, sekundomer kabi ishlaydi
+                    timerInterval = setInterval(() => { seconds++; updateDisplay(); }, 1000);
+                } else {
+                    // Agar dars/tanaffus tanlangan bo'lsa, pastga sanaydi
+                    timerInterval = setInterval(() => {
+                        if (seconds > 0) {
+                            seconds--;
+                            updateDisplay();
+                        } else {
+                            stopTimer();
+                            alert("Vaqt tugadi!");
+                        }
+                    }, 1000);
+                }
                 btn.innerText = "To'xtatish";
                 btn.className = "btn-stop";
-                timerInterval = setInterval(() => {
-                    if (seconds > 0 || !timerInterval) {
-                        if(seconds > 0) seconds--;
-                        else seconds++; // Agar oddiy sekundomer bo'lsa yuqoriga sanaydi
-                        updateDisplay();
-                        if(seconds === 0 && timerInterval) {
-                            alert("Vaqt tugadi!");
-                            toggleTimer();
-                        }
-                    } else {
-                        seconds++;
-                        updateDisplay();
-                    }
-                }, 1000);
+                isRunning = true;
             } else {
-                isRunning = false;
-                btn.innerText = "Boshlash";
-                btn.className = "btn-main";
-                clearInterval(timerInterval);
+                stopTimer();
             }
         }
 
-        function setPomodoro(min) {
+        function stopTimer() {
             clearInterval(timerInterval);
             isRunning = false;
+            const btn = document.getElementById('startStopBtn');
+            btn.innerText = "Boshlash";
+            btn.className = "btn-main";
+        }
+
+        function setPomodoro(min) {
+            stopTimer();
             seconds = min * 60;
-            document.getElementById('status').innerText = min === 25 ? "Diqqat: Dars" : "Hordiq: Tanaffus";
-            document.getElementById('startStopBtn').innerText = "Boshlash";
-            document.getElementById('startStopBtn').className = "btn-main";
+            document.getElementById('status').innerText = (min === 25) ? "DIQQAT: DARSDASIZ" : "HORDID: TANAFFUS";
             updateDisplay();
         }
 
@@ -91,10 +106,5 @@
             document.body.classList.toggle('dark-mode');
         }
     </script>
-
-    <div style="margin-top: 20px; font-size: 14px; color: #888;">
-        Tashriflar soni: 
-        <img src="https://hitwebcounter.com/counter/counter.php?page=taymer1615&style=0006&nbdigits=5&type=page&initCount=0" title="Free Counter" Alt="web counter" border="0" />
-    </div>
-    </body>
+</body>
 </html>
