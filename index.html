@@ -3,22 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mening Pul Ishlaydigan Saytim</title>
+    <title>Pro Taymer - Dars va Tanaffus</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background-color: #f4f4f9; padding-top: 100px; }
-        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; }
-        #display { font-size: 60px; font-weight: bold; color: #333; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
-        button { padding: 15px 40px; font-size: 20px; font-weight: bold; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 50px; transition: 0.3s; }
+        :root { --bg: #f4f4f9; --text: #333; --card: white; }
+        .dark-mode { --bg: #1a1a2e; --text: #eee; --card: #16213e; }
+        
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: var(--bg); color: var(--text); transition: 0.3s; padding-top: 50px; }
+        .container { background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: inline-block; width: 90%; max-width: 350px; }
+        #display { font-size: 70px; font-weight: bold; margin: 20px 0; font-variant-numeric: tabular-nums; }
+        
+        .buttons { display: flex; flex-direction: column; gap: 10px; }
+        button { padding: 15px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 12px; transition: 0.2s; }
+        
+        .btn-main { background: #28a745; color: white; }
+        .btn-stop { background: #dc3545; color: white; }
+        .btn-mode { background: #007bff; color: white; }
+        .btn-dark { background: #444; color: white; margin-top: 15px; }
+        
         button:active { transform: scale(0.95); }
-        .stop { background: #dc3545 !important; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Onlayn Taymer</h2>
+        <h2 id="status">Tayyor</h2>
         <div id="display">00:00</div>
-        <button id="startStopBtn" onclick="toggleTimer()">Boshlash</button>
+        
+        <div class="buttons">
+            <button id="startStopBtn" class="btn-main" onclick="toggleTimer()">Boshlash</button>
+            <button class="btn-mode" onclick="setPomodoro(25)">🎓 Dars (25 daqiqa)</button>
+            <button class="btn-mode" onclick="setPomodoro(5)" style="background:#17a2b8;">☕ Tanaffus (5 daqiqa)</button>
+            <button class="btn-dark" onclick="toggleDarkMode()">🌙 Tungi rejim</button>
+        </div>
     </div>
 
     <script>
@@ -26,27 +42,53 @@
         let timerInterval = null;
         let isRunning = false;
 
+        function updateDisplay() {
+            let m = Math.floor(seconds / 60);
+            let s = seconds % 60;
+            document.getElementById('display').innerText = 
+                (m < 10 ? "0"+m : m) + ":" + (s < 10 ? "0"+s : s);
+        }
+
         function toggleTimer() {
             const btn = document.getElementById('startStopBtn');
-            const display = document.getElementById('display');
-
             if (!isRunning) {
                 isRunning = true;
                 btn.innerText = "To'xtatish";
-                btn.classList.add('stop');
-                
+                btn.className = "btn-stop";
                 timerInterval = setInterval(() => {
-                    seconds++;
-                    let m = Math.floor(seconds / 60);
-                    let s = seconds % 60;
-                    display.innerText = (m < 10 ? "0"+m : m) + ":" + (s < 10 ? "0"+s : s);
+                    if (seconds > 0 || !timerInterval) {
+                        if(seconds > 0) seconds--;
+                        else seconds++; // Agar oddiy sekundomer bo'lsa yuqoriga sanaydi
+                        updateDisplay();
+                        if(seconds === 0 && timerInterval) {
+                            alert("Vaqt tugadi!");
+                            toggleTimer();
+                        }
+                    } else {
+                        seconds++;
+                        updateDisplay();
+                    }
                 }, 1000);
             } else {
                 isRunning = false;
                 btn.innerText = "Boshlash";
-                btn.classList.remove('stop');
+                btn.className = "btn-main";
                 clearInterval(timerInterval);
             }
+        }
+
+        function setPomodoro(min) {
+            clearInterval(timerInterval);
+            isRunning = false;
+            seconds = min * 60;
+            document.getElementById('status').innerText = min === 25 ? "Diqqat: Dars" : "Hordiq: Tanaffus";
+            document.getElementById('startStopBtn').innerText = "Boshlash";
+            document.getElementById('startStopBtn').className = "btn-main";
+            updateDisplay();
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
         }
     </script>
 </body>
